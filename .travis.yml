@@ -1,0 +1,35 @@
+dist: focal
+language: c
+
+
+addons:
+  apt:
+    packages:
+      - --install-recommends
+      - gcc-arm-none-eabi
+
+  sonarcloud:
+    organization: "simogaspa84"
+    token:
+      secure:  "g6dBP1G4jSG2LcbbH+nfpd7SEasDnQeT8a81F1TIHdgCMjD57Do4AmM+lSAvKcx5uIoL9ltQShh4lI8j/XiKUWUS7YU53PUQrgMgWn24MFJ04G7YFIq1C2W8JPD2rppBEhcc7varChk9pdSK9dqr+Y2a22dN/kzD4sXmlAxgE9XTLtNzNUOm0CkWmKExIXNhhn8wr0cUgwbEfkLYZAhmTsfqEN07xfAZgcpFMHmexJir7kl/pe5jSE3aSJ4PUnkpU8C8FGHSqvvlOdH2YiNM4fBke+z34ea6dqjc0SLpo7upT8CSVpXPzI04eyne2Yrd6o9LiJ3QV/59hlPNQPReAlfTFXlYhijsB/Pf4VsVjZYrg/HoYP9ZVQNnJA/SVuXfcCizbrGaIX3tHXXnzcSDQG2zd+VibqcWaJaWnXCr8TJWeCKEmhXh/iCx+jNLiPtiEQOZ0vpLTYOwDq3dFGqvzcqj6JYaEVsgKHwRHtQrI+6jL2W1pZ8pwhUxNftAHiImmDXP5zix0G5zK+y+SypZ9s+1gSVvXpdDKm91KqyNK1GEnPy2QEqGAtkval/kiyOsCnsrC1PAfpKbB3bI8C55Ox+oEAexRzqWjvOfyLecnr8QlOaT5gvp6RaRI50Qlnhtm0Y16f2DI3xRNPxY9vsMGKzlsUbAHYkKlfdW3Bdbsdg="
+
+
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - cd ..
+  - NUMBER_OF_PROCESSORS=$(nproc --all)
+  # Wraps the compilation with the Build Wrapper to generate configuration (used
+  # later by the SonarQube Scanner) into the "bw-output" folder
+  - build-wrapper-linux-x86-64 --out-dir bw-output cmake --build build/
+  # And finally run the SonarQube analysis - read the "sonar-project.properties"
+  # file to see the specific configuration
+  - sonar-scanner -Dsonar.cfamily.cache.enabled=true -Dsonar.cfamily.cache.path=${TRAVIS_HOME}/.cfamily -Dsonar.cfamily.threads=${NUMBER_OF_PROCESSORS}
+  
+cache:
+  directories:
+    - $HOME/.sonar/cache
+    # This contains the CFamily cache. According to https://docs.travis-ci.com/user/caching/#pull-request-builds-and-caches,
+    # for a PR, it will use the cache of the target branch if the branch of the PR does not already have its cache.
+    - $HOME/.cfamily  
